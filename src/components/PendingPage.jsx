@@ -1,8 +1,8 @@
-export default function PendingPage({ drink, hint }) {
+export default function PendingPage({ order, hint }) {
   return (
     <article className="page pending-page" aria-busy="true">
       <p className="eyebrow">Recipe</p>
-      <h2 className="page-title">{drink}</h2>
+      <h2 className="page-title">{order}</h2>
       <div className="ornament" aria-hidden="true">
         ✦
       </div>

@@ -2,11 +2,12 @@
 // (see vite.config.js). Set VITE_API_URL to point at a deployed backend.
 const API_BASE = import.meta.env.VITE_API_URL ?? '/api'
 
-export async function fetchRecipe({ drink, notes = null }) {
+// `order` is freeform text — a drink name, a description, however it was typed.
+export async function fetchRecipe(order) {
   const res = await fetch(`${API_BASE}/recipe`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ drink, notes }),
+    body: JSON.stringify({ order }),
   })
 
   if (!res.ok) {
@@ -26,5 +27,9 @@ export async function fetchRecipe({ drink, notes = null }) {
   }
 
   const data = await res.json()
-  return data.recipe
+  return {
+    drinkName: data.drink_name,
+    prepTime: data.prep_time,
+    recipe: data.recipe,
+  }
 }

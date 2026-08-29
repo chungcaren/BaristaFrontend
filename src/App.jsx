@@ -42,8 +42,8 @@ function App() {
     input.style.height = `${input.scrollHeight}px`
   }, [draft, started])
 
-  async function order(drink) {
-    const trimmed = drink.trim()
+  async function submitOrder(text) {
+    const trimmed = text.trim()
     if (!trimmed || pending) return
 
     setDraft('')
@@ -51,17 +51,15 @@ function App() {
     setPending(trimmed)
 
     try {
-      const recipe = await fetchRecipe({ drink: trimmed })
-      setOrders((prev) => [...prev, { id: nextId.current++, drink: trimmed, recipe }])
+      const { drinkName, prepTime, recipe } = await fetchRecipe(trimmed)
+      setOrders((prev) => [
+        ...prev,
+        { id: nextId.current++, order: trimmed, drinkName, prepTime, recipe },
+      ])
     } catch (err) {
       setOrders((prev) => [
         ...prev,
-        {
-          id: nextId.current++,
-          drink: trimmed,
-          recipe: `That page came back blank — ${err.message}`,
-          error: true,
-        },
+        { id: nextId.current++, order: trimmed, error: err.message },
       ])
     } finally {
       setPending(null)
@@ -71,13 +69,13 @@ function App() {
 
   function handleSubmit(event) {
     event.preventDefault()
-    order(draft)
+    submitOrder(draft)
   }
 
   function handleKeyDown(event) {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()
-      order(draft)
+      submitOrder(draft)
     }
   }
 
@@ -129,11 +127,11 @@ function App() {
       {started ? (
         <main className="book">
           {orders.map((entry, i) => (
-            <RecipePage key={entry.id} order={entry} number={i + 1} />
+            <RecipePage key={entry.id} entry={entry} number={i + 1} />
           ))}
           {pending && (
             <PendingPage
-              drink={pending}
+              order={pending}
               hint={slow ? 'Warming up the espresso machine…' : null}
             />
           )}
@@ -150,7 +148,7 @@ function App() {
           <ul className="suggestions">
             {SUGGESTIONS.map((s) => (
               <li key={s}>
-                <button type="button" onClick={() => order(s)}>
+                <button type="button" onClick={() => submitOrder(s)}>
                   {s}
                 </button>
               </li>
