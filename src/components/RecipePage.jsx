@@ -1,4 +1,5 @@
 import Markdown from 'react-markdown'
+import ShareButton from './ShareButton'
 
 // The model names the drink itself, so it often differs from what was typed.
 // Show the original order too, unless it's essentially the same words.
@@ -7,7 +8,7 @@ function sameWords(a = '', b = '') {
   return norm(a) === norm(b)
 }
 
-export default function RecipePage({ entry, number }) {
+export default function RecipePage({ entry, shareable = false }) {
   const { order, drinkName, prepTime, recipe, error } = entry
 
   if (error) {
@@ -33,9 +34,7 @@ export default function RecipePage({ entry, number }) {
       <div className="page-body">
         <Markdown>{recipe}</Markdown>
       </div>
-      <footer className="page-number">
-        <span aria-hidden="true">№ {number}</span>
-      </footer>
+      {shareable && <ShareButton entry={entry} />}
     </article>
   )
 }

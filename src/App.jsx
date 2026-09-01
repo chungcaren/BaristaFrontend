@@ -12,19 +12,20 @@ const SUGGESTIONS = [
 ]
 
 function App() {
-  const [orders, setOrders] = useState([])
+  // Only one recipe is on screen at a time — a new order turns the page.
+  const [entry, setEntry] = useState(null)
   const [draft, setDraft] = useState('')
   const [pending, setPending] = useState(null)
   const [slow, setSlow] = useState(false)
   const nextId = useRef(0)
   const inputRef = useRef(null)
-  const bottomRef = useRef(null)
 
-  const started = orders.length > 0 || pending !== null
+  const started = entry !== null || pending !== null
 
+  // A fresh page starts at the top.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [orders, pending])
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [entry, pending])
 
   // The backend sleeps on Render's free tier, so the first order of the day can
   // take a while. Say so rather than leaving the page blank.
@@ -48,23 +49,25 @@ function App() {
 
     setDraft('')
     setSlow(false)
+    setEntry(null) // clear the old recipe before the new one is written
     setPending(trimmed)
+
+    const id = nextId.current++
 
     try {
       const { drinkName, prepTime, recipe } = await fetchRecipe(trimmed)
-      setOrders((prev) => [
-        ...prev,
-        { id: nextId.current++, order: trimmed, drinkName, prepTime, recipe },
-      ])
+      setEntry({ id, order: trimmed, drinkName, prepTime, recipe })
     } catch (err) {
-      setOrders((prev) => [
-        ...prev,
-        { id: nextId.current++, order: trimmed, error: err.message },
-      ])
+      setEntry({ id, order: trimmed, error: err.message })
     } finally {
       setPending(null)
       inputRef.current?.focus()
     }
+  }
+
+  function closeBook() {
+    setEntry(null)
+    nextId.current = 0
   }
 
   function handleSubmit(event) {
@@ -111,12 +114,12 @@ function App() {
         <span className="mark" aria-hidden="true">
           ☕
         </span>
-        <span className="wordmark">The Barista's Book</span>
+        <span className="wordmark">Barista Buddy</span>
         {started && (
           <button
             type="button"
             className="reset"
-            onClick={() => setOrders([])}
+            onClick={closeBook}
             disabled={pending !== null}
           >
             Close book
@@ -126,16 +129,16 @@ function App() {
 
       {started ? (
         <main className="book">
-          {orders.map((entry, i) => (
-            <RecipePage key={entry.id} entry={entry} number={i + 1} />
-          ))}
-          {pending && (
+          {pending ? (
             <PendingPage
               order={pending}
               hint={slow ? 'Warming up the espresso machine…' : null}
             />
+          ) : (
+            // Keying on the id remounts the article, so every new recipe
+            // replays the page-turn animation.
+            <RecipePage key={entry.id} entry={entry} shareable />
           )}
-          <div ref={bottomRef} />
         </main>
       ) : (
         <main className="welcome">
