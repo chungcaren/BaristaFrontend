@@ -38,7 +38,7 @@ export async function fetchRecipe(order) {
 
 // Store a recipe so it can be shared. Resolves to its share id.
 export async function saveRecipe({ order, drinkName, prepTime, recipe }) {
-  const res = await fetch(`${API_BASE}/recipes`, {
+  const res = await fetch(`${API_BASE}/save`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
